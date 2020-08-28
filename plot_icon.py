@@ -15,7 +15,7 @@ parser.add_argument('-f', '--field',  dest = 'var',\
                     help = 'field to plot') 
 
 parser.add_argument('--corners', '-c', dest = 'corner',\
-                    default = [6,11,45,48],\
+                    default = [5.5,10.5,44.5,48.5],\
                     type = int,\
                     nargs = 4,\
                     help = 'corners of domain to plot: MinLon MaxLon MinLat MaxLat')
@@ -38,6 +38,9 @@ wks = Ngl.open_wks("pdf","map")
 
 
 if args.grid_only:
+
+    print('Plot Grid only')
+
     config = Ngl.Resources()
     config.nglFrame             = False
     config.nglDraw              = False
@@ -64,6 +67,7 @@ if args.grid_only:
 
 
 # regular plot
+print('Plot regular')
 datafile = Nio.open_file(args.data)
 field = datafile.variables[args.var]
 
@@ -95,6 +99,7 @@ config1.cnFillMode            = "CellFill"
 map = Ngl.contour_map(wks,field,config1)
 
 if args.global_plot:
+    print('Plot global')
 
     config2 = Ngl.Resources()
     config2.mpProjection          = "Orthographic"
