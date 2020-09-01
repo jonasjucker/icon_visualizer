@@ -26,6 +26,15 @@ parser.add_argument('--global_plot','-gp', action='store_true',\
 parser.add_argument('--grid_only','-go', action='store_true',\
                     help = 'plot the icon grid only and exit')
 
+parser.add_argument('-nd', '--n_dim',  dest = 'n_dim',\
+                    default = 1,\
+                    type = int,\
+                    help = 'lenght of secondary dimensions') 
+
+parser.add_argument('-n', '--name',  dest = 'name',\
+                    default = 'map',\
+                    help = 'name of saved plotting file') 
+
 args = parser.parse_args()
 
 gridfile = Nio.open_file(args.grid)
@@ -34,7 +43,7 @@ vlat = numpy.rad2deg( gridfile.variables["vlat"][:] )
 
 edge_vertices = gridfile.variables["edge_vertices"][:]
 
-wks = Ngl.open_wks("pdf","map")
+wks = Ngl.open_wks("pdf",args.name)
 
 
 if args.grid_only:
@@ -69,34 +78,42 @@ if args.grid_only:
 # regular plot
 print('Plot regular')
 datafile = Nio.open_file(args.data)
-field = datafile.variables[args.var]
 
 clon  = numpy.rad2deg( gridfile.variables["clon"][:] )
 clat  = numpy.rad2deg( gridfile.variables["clat"][:] )
 clonv  = numpy.rad2deg( gridfile.variables["clon_vertices"][:] )
 clatv  = numpy.rad2deg( gridfile.variables["clat_vertices"][:] )
 
-config1 = Ngl.Resources()
-config1.mpProjection          = "CylindricalEquidistant"
-config1.mpLimitMode           = "LatLon"
-config1.mpMinLonF             = args.corner[0]
-config1.mpMaxLonF             = args.corner[1]
-config1.mpMinLatF             = args.corner[2]
-config1.mpMaxLatF             = args.corner[3]
-config1.cnFillOn              = True
-config1.cnLinesOn             = False
-config1.cnLineLabelsOn        = False
-config1.sfXArray              = clon
-config1.sfYArray              = clat
+for dim in range(0,args.n_dim):
+    if args.n_dim == 1:
+        field = datafile.variables[args.var]
+    else:
+        field = datafile.variables[args.var][dim,:]
 
-# make icon-triangles visible
-clon_vertices                 = clonv
-clat_vertices                 = clatv
-config1.sfXCellBounds         = clon_vertices
-config1.sfYCellBounds         = clat_vertices
-config1.cnFillMode            = "CellFill"
+    print('Plot dim: ', dim)
 
-map = Ngl.contour_map(wks,field,config1)
+    config1 = Ngl.Resources()
+    config1.tiMainString          = f'{args.var} at dimension {dim + 1}/{args.n_dim}'
+    config1.mpProjection          = "CylindricalEquidistant"
+    config1.mpLimitMode           = "LatLon"
+    config1.mpMinLonF             = args.corner[0]
+    config1.mpMaxLonF             = args.corner[1]
+    config1.mpMinLatF             = args.corner[2]
+    config1.mpMaxLatF             = args.corner[3]
+    config1.cnFillOn              = True
+    config1.cnLinesOn             = False
+    config1.cnLineLabelsOn        = False
+    config1.sfXArray              = clon
+    config1.sfYArray              = clat
+
+    # make icon-triangles visible
+    clon_vertices                 = clonv
+    clat_vertices                 = clatv
+    config1.sfXCellBounds         = clon_vertices
+    config1.sfYCellBounds         = clat_vertices
+    config1.cnFillMode            = "CellFill"
+
+    map = Ngl.contour_map(wks,field,config1)
 
 if args.global_plot:
     print('Plot global')
